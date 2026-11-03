@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لحّق السرفيس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Reem+Kufi:wght@600;700&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* a small retro palette */
+  --night: #0f1020; --navy: #1d2b53; --plum: #7e2553; --green: #008751; --brown: #ab5236; --stone: #5f574f;
+  --silver: #c2c3c7; --cream: #fff1e8; --red: #ff004d; --orange: #ffa300; --yellow: #ffec27;
+  --lime: #00e436; --sky: #29adff; --lav: #83769c; --peach: #ffccaa;
+  --px: 4px;
+  --corners: polygon(0 var(--px), var(--px) var(--px), var(--px) 0, calc(100% - var(--px)) 0, calc(100% - var(--px)) var(--px),
+    100% var(--px), 100% calc(100% - var(--px)), calc(100% - var(--px)) calc(100% - var(--px)), calc(100% - var(--px)) 100%,
+    var(--px) 100%, var(--px) calc(100% - var(--px)), 0 calc(100% - var(--px)));
+}
+* { box-sizing: border-box; }
+html { background: var(--night); }
+body {
+  margin: 0; color: var(--cream); font-family: "Tajawal", "Geeza Pro", Tahoma, sans-serif; line-height: 1.6;
+  background-color: var(--night);
+  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+.num { font-family: "Press Start 2P", monospace; }
+.kufi { font-family: "Reem Kufi", "Tajawal", sans-serif; }
+
+/* pixel boxes and buttons */
+.px {
+  background: var(--navy); border: var(--px) solid #000; clip-path: var(--corners);
+  box-shadow: inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 rgba(0,0,0,.35), inset var(--px) var(--px) 0 rgba(255,255,255,.12);
+  padding: 14px;
+}
+.px h2 { margin: 0 0 10px; font-family: "Tajawal", sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--yellow); text-shadow: 2px 2px 0 #000; }
+.btn {
+  font: inherit; font-weight: 800; color: #1a1a1a; background: var(--orange); border: var(--px) solid #000; clip-path: var(--corners);
+  box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.35);
+  padding: 8px 14px; cursor: pointer; transition: transform .05s;
+}
+.btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: inset 4px 4px 0 rgba(0,0,0,.25); }
+.btn:disabled { filter: grayscale(1) brightness(.6); cursor: default; }
+.hint { color: var(--silver); font-size: .88rem; margin: 8px 0 0; }
+
+/* stage */
+.stage { position: relative; padding: 0; overflow: hidden; background: #7ec8f2; }
+.stage svg.scene { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.layer { animation: scroll linear infinite; animation-play-state: paused; }
+#far { animation-duration: 60s; } #mid { animation-duration: 16s; } #lines { animation-duration: 2.4s; }
+.moving .layer { animation-play-state: running; }
+@keyframes scroll { from { transform: translateX(-320px); } to { transform: translateX(0); } }
+.moving #bus { animation: bounce .24s steps(2) infinite; }
+@keyframes bounce { 50% { transform: translateY(-1px); } }
+.hub { animation: spin .2s steps(2) infinite; animation-play-state: paused; }
+.moving .hub { animation-play-state: running; }
+@keyframes spin { 50% { transform: translateX(2px); } }
+#faculty { transform: translateX(-140px); transition: transform 2s steps(24); }
+.arrive #faculty { transform: translateX(0); }
+#busMove { transition: transform 2.2s steps(30); }
+.kick #busMove { transform: translateX(-160px); }
+#kid { opacity: 0; }
+#kid.show { opacity: 1; animation: hop .5s steps(3); }
+@keyframes hop { 0% { transform: translateY(-8px); } 60% { transform: translateY(2px); } }
+#angerMark, #steam { opacity: 0; }
+.mood-annoyed #angerMark, .mood-angry #angerMark { opacity: 1; animation: blink .6s steps(2) infinite; }
+.mood-angry #steam { opacity: 1; }
+.mood-angry #driverFace { fill: var(--red); }
+.puff { animation: puff 1s steps(4) infinite; }
+.puff:nth-child(2) { animation-delay: .33s; } .puff:nth-child(3) { animation-delay: .66s; }
+@keyframes puff { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
+@keyframes blink { 50% { opacity: .2; } }
+.cf { animation: fall 1.8s steps(18) forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 170px) rotate(90deg); } }
+.shake { animation: shake .4s steps(6); }
+@keyframes shake { 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 0); } 80% { transform: translate(3px, 2px); } }
+.flash::after { content: ""; position: absolute; inset: 0; background: var(--red); opacity: 0; animation: flash .6s steps(3); pointer-events: none; }
+@keyframes flash { 30% { opacity: .35; } }
+
+/* HUD on top of the stage */
+.hud { position: absolute; top: 8px; inset-inline: 8px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.hud-box { background: rgba(15,16,32,.82); border: 3px solid #000; padding: 4px 8px; display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: .85rem; }
+.hearts { display: flex; gap: 3px; }
+.hearts i { width: 14px; height: 12px; background: var(--stone); clip-path: polygon(0 25%, 25% 0, 50% 25%, 75% 0, 100% 25%, 100% 55%, 50% 100%, 0 55%); }
+.hearts.p3 i { background: var(--lime); }
+.hearts.p2 i:nth-child(-n+2) { background: var(--yellow); }
+.hearts.p1 i:first-child { background: var(--red); animation: blink .5s steps(2) infinite; }
+.coin { width: 12px; height: 12px; background: var(--yellow); border: 2px solid var(--orange); border-radius: 0; box-shadow: inset -2px -2px 0 var(--orange); }
+.coin.pop { animation: hop .4s steps(3); }
+.minimap { position: absolute; bottom: 6px; inset-inline: 10px; height: 18px; pointer-events: none; }
+.minimap .track { position: absolute; top: 8px; inset-inline: 0; height: 4px; background: rgba(0,0,0,.55); }
+.minimap .dot { position: absolute; top: 4px; width: 12px; height: 12px; background: var(--cream); border: 2px solid #000; transform: translateX(50%); }
+.minimap .me { position: absolute; top: 1px; width: 14px; height: 14px; background: var(--orange); border: 2px solid #000; transform: translateX(50%); transition: right .8s steps(8); }
+
+/* title + end screens */
+.overlay { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px;
+           background: rgba(15,16,32,.86); padding: 12px; z-index: 2; }
+.overlay[hidden] { display: none; }
+.overlay h1 { margin: 0; font-family: "Reem Kufi", sans-serif; font-size: clamp(2rem, 7vw, 3.6rem); color: var(--yellow);
+              text-shadow: 4px 4px 0 var(--plum), 8px 8px 0 #000; line-height: 1.2; }
+.overlay p { margin: 0; font-weight: 700; text-shadow: 2px 2px 0 #000; }
+.overlay .btn { justify-self: center; font-size: 1.1rem; }
+.blink { animation: blink 1s steps(2) infinite; }
+.overlay.end-ok, .overlay.end-bad { background: transparent; align-content: start; padding-top: 40px; }
+.overlay.end-ok p, .overlay.end-bad p { background: rgba(15,16,32,.85); padding: 2px 10px; justify-self: center; }
+.end-ok h1 { color: var(--lime); } .end-bad h1 { color: var(--red); text-shadow: 4px 4px 0 #000; }
+
+/* dialogue box */
+.dlg { display: flex; gap: 12px; align-items: stretch; margin-top: 12px; background: var(--cream); color: #111; min-height: 104px; cursor: pointer; }
+.portrait { flex: none; width: 76px; height: 76px; background: var(--sky); border: 4px solid #000; image-rendering: pixelated; align-self: center; }
+.portrait svg { width: 100%; height: 100%; display: block; }
+.dlg .who { display: inline-block; font-weight: 800; color: var(--cream); background: var(--plum);
+            padding: 0 10px; border: 3px solid #000; }
+.dlg[data-who="student"] .who { background: var(--green); }
+.dlg .text { font-size: 1.25rem; font-weight: 800; margin-top: 6px; min-height: 2em; }
+.dlg .more { color: var(--plum); font-size: .7rem; }
+.dlg .body { flex: 1; min-width: 0; }
+#pStudent { display: none; } .dlg[data-who="student"] #pStudent { display: block; } .dlg[data-who="student"] #pDriver { display: none; }
+.dlg[data-who="student"] .portrait { background: var(--peach); }
+
+/* choices */
+.choices { margin-top: 12px; }
+.choices .list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.choices .btn { text-align: start; background: var(--cream); display: flex; gap: 8px; align-items: center; }
+.choices .btn .k { font-family: "Press Start 2P", monospace; font-size: .6rem; background: var(--navy); color: var(--yellow); padding: 4px 5px; }
+.choices .btn:hover:not(:disabled) { background: var(--yellow); }
+.choices .btn:hover:not(:disabled)::after { content: "◀"; margin-inline-start: auto; animation: blink .6s steps(2) infinite; }
+
+/* panels */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.panels .wide { grid-column: 1 / -1; }
+@media (max-width: 760px) { .overlay { gap: 6px; } .overlay h1 { font-size: 1.6rem; text-shadow: 3px 3px 0 #000; } .overlay p { font-size: .8rem; } .overlay .btn { font-size: .9rem; padding: 4px 10px; } .panels { grid-template-columns: 1fr; } .dlg .text { font-size: 1.05rem; } .portrait { width: 60px; height: 60px; } .hud-box { font-size: .72rem; } }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.facts li { background: var(--night); border: 3px solid #000; padding: 4px 10px; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.facts li::before { content: ""; width: 10px; height: 10px; flex: none; background: var(--k, var(--silver)); box-shadow: 2px 2px 0 #000; }
+.facts li.new { animation: slot .5s steps(4); outline: 3px solid var(--lime); }
+.facts li.mod { outline: 3px solid var(--yellow); }
+.facts li.gone { text-decoration: line-through; opacity: .4; outline: 3px solid var(--red); }
+@keyframes slot { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.06); } }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+.log li { background: var(--night); border: 3px solid #000; padding: 6px 10px; animation: slot .4s steps(4); }
+.log .rule { font-weight: 800; }
+.badge { font-family: "Press Start 2P", monospace; font-size: .55rem; background: var(--orange); color: #000; padding: 3px 5px; margin-inline-end: 6px; border: 2px solid #000; }
+.tag { display: inline-block; line-height: 1.7; white-space: nowrap; font-size: .75rem; font-weight: 800; padding: 0 8px; margin-inline-start: 6px; border: 2px solid #000; background: var(--lav); color: #000; }
+.tag.auto { background: var(--yellow); }
+.chg { display: block; font-size: .85rem; font-weight: 700; }
+.chg.add { color: var(--lime); } .chg.del { color: #ff6b8a; } .chg.mod { color: var(--yellow); }
+.term { background: #000; color: var(--lime); font-weight: 700; min-height: 90px; max-height: 260px; overflow-y: auto; padding: 10px 12px; border: 3px solid var(--stone); }
+.term div::before { content: "> "; color: var(--stone); }
+.term .cursor { display: inline-block; width: 10px; height: 16px; background: var(--lime); vertical-align: middle; animation: blink 1s steps(2) infinite; }
+.term .who-d { color: var(--orange); } .term .who-s { color: var(--sky); } .term .who-r { color: var(--yellow); }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.topbar .logo { font-family: "Reem Kufi", sans-serif; font-weight: 700; color: var(--yellow); text-shadow: 3px 3px 0 var(--plum); font-size: 1.4rem; }
+.sound { font-size: .85rem; padding: 4px 10px; background: var(--silver); }
+@media (prefers-reduced-motion: reduce) { .layer, .hub, .moving #bus, .blink, .puff, .shake, .cf { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">لحّق السرفيس!</div>
+    <button class="btn sound" id="sound" type="button">الصوت: يعمل</button>
+  </div>
+
+  <!-- ===================== stage ===================== -->
+  <div class="px stage" id="stage">
+    <svg class="scene" viewBox="0 0 320 150" shape-rendering="crispEdges" aria-label="سرفيس أبو صبحي على طريق التل">
+      <rect width="320" height="150" fill="#9fd8f5"/>
+      <rect width="320" height="34" fill="#7ec8f2"/>
+      <rect y="34" width="320" height="18" fill="#8fd0f4"/>
+      <g fill="#ffec27"><rect x="276" y="12" width="12" height="16"/><rect x="272" y="16" width="20" height="8"/></g>
+      <g id="far" class="layer"></g>
+      <g id="mid" class="layer"></g>
+      <rect y="106" width="320" height="6" fill="#c2a27a"/>
+      <rect y="112" width="320" height="30" fill="#4a4d57"/>
+      <rect y="112" width="320" height="2" fill="#fff1e8"/>
+      <rect y="140" width="320" height="2" fill="#fff1e8"/>
+      <rect y="142" width="320" height="8" fill="#ab5236"/>
+      <g id="lines" class="layer"></g>
+      <g id="faculty">
+        <rect x="12" y="46" width="96" height="62" fill="#000"/>
+        <rect x="14" y="48" width="92" height="60" fill="#c2c3c7"/>
+        <g id="facWin" fill="#29adff"></g>
+        <rect x="50" y="86" width="20" height="22" fill="#5f574f"/>
+        <rect x="59" y="86" width="2" height="22" fill="#000"/>
+        <rect x="20" y="30" width="80" height="14" fill="#000"/>
+        <rect x="22" y="32" width="76" height="10" fill="#1d2b53"/>
+        <text x="60" y="40" text-anchor="middle" font-size="7.5" fill="#ffec27" font-family="Reem Kufi, Tajawal, sans-serif" font-weight="700" shape-rendering="auto">كلية المعلوماتية</text>
+        
+      </g>
+      <g transform="translate(138 84) scale(1.5)">
+        <g id="busMove"><g id="bus">
+          <rect x="16" y="-4" width="16" height="6" fill="#000"/>
+          <rect x="17" y="-3" width="14" height="4" fill="#ffec27"/>
+          <text x="24" y="0.6" text-anchor="middle" font-size="3.6" font-weight="700" fill="#000" font-family="Tajawal, sans-serif" shape-rendering="auto">التل</text>
+          <rect x="-1" y="3" width="50" height="18" fill="#000"/>
+          <rect x="0" y="4" width="48" height="16" fill="#fff1e8"/>
+          <rect x="1" y="2" width="44" height="2" fill="#c2c3c7"/>
+          <rect x="1" y="6" width="6" height="6" fill="#29adff"/>
+          <rect id="driverFace" x="3" y="8" width="3" height="3" fill="#ffccaa"/>
+          <rect x="3" y="10" width="3" height="1" fill="#000"/>
+          <g fill="#29adff"><rect x="9" y="6" width="8" height="5"/><rect x="19" y="6" width="8" height="5"/><rect x="29" y="6" width="8" height="5"/><rect x="39" y="6" width="7" height="5"/></g>
+          <rect x="11" y="8" width="3" height="3" fill="#ab5236"/><rect x="22" y="8" width="3" height="3" fill="#ffccaa"/><rect x="41" y="8" width="3" height="3" fill="#ab5236"/>
+          <rect x="0" y="14" width="48" height="2" fill="#ffa300"/>
+          <rect x="0" y="16" width="48" height="1" fill="#ff004d"/>
+          <rect x="0" y="13" width="2" height="2" fill="#ffec27"/>
+          <rect x="46" y="13" width="2" height="2" fill="#ff004d"/>
+          <rect x="0" y="19" width="48" height="1" fill="#5f574f"/>
+          <rect x="6" y="18" width="8" height="6" fill="#000"/><rect class="hub" x="8" y="20" width="2" height="2" fill="#c2c3c7"/>
+          <rect x="34" y="18" width="8" height="6" fill="#000"/><rect class="hub" x="36" y="20" width="2" height="2" fill="#c2c3c7"/>
+          <g id="angerMark" fill="#ff004d"><rect x="2" y="-9" width="1" height="5"/><rect x="5" y="-9" width="1" height="5"/><rect x="0" y="-7" width="8" height="1"/></g>
+          <g id="steam" fill="#c2c3c7"><rect class="puff" x="9" y="-6" width="3" height="3"/><rect class="puff" x="12" y="-9" width="3" height="3"/><rect class="puff" x="7" y="-11" width="3" height="3"/></g>
+        </g></g>
+      </g>
+      <g id="kid" transform="translate(214 99) scale(1.5)">
+        <rect x="1" y="0" width="6" height="2" fill="#000"/>
+        <rect x="1" y="2" width="6" height="4" fill="#ffccaa"/>
+        <rect x="1" y="3" width="6" height="1" fill="#000"/>
+        <rect x="0" y="6" width="8" height="5" fill="#ff004d"/>
+        <rect x="6" y="6" width="3" height="5" fill="#008751"/>
+        <rect x="1" y="11" width="2" height="3" fill="#1d2b53"/><rect x="5" y="11" width="2" height="3" fill="#1d2b53"/>
+        <g id="kidBang"><rect x="10" y="-6" width="2" height="4" fill="#ffec27"/><rect x="10" y="-1" width="2" height="1" fill="#ffec27"/></g>
+      </g>
+      <g id="confetti"></g>
+    </svg>
+
+    <div class="hud">
+      <div class="hud-box"><span>صبر أبو صبحي</span><div class="hearts p3" id="hearts"><i></i><i></i><i></i></div><span id="moodName">طبيعي</span></div>
+      <div class="hud-box"><span class="coin" id="coin"></span><span class="num" id="fare" style="font-size:.7rem">?</span></div>
+    </div>
+    <div class="minimap" aria-hidden="true">
+      <div class="track"></div>
+      <div class="dot" style="right:0"></div><div class="dot" style="right:50%"></div><div class="dot" style="right:100%;background:var(--lime)"></div>
+      <div class="me" id="me" style="right:0"></div>
+    </div>
+
+    <div class="overlay" id="title">
+      <h1>لحّق السرفيس!</h1>
+      <p>خط دمشق التل، والسائق أبو صبحي. هل ستصل إلى كلية المعلوماتية؟</p>
+      <button class="btn blink-wrap" id="startBtn" type="button"><span class="blink">◀</span> ابدأ الرحلة</button>
+    </div>
+    <div class="overlay" id="end" hidden>
+      <h1 id="endTitle"></h1>
+      <p id="endSub"></p>
+      <button class="btn" id="againBtn" type="button"><span class="blink">◀</span> رحلة جديدة</button>
+    </div>
+  </div>
+
+  <!-- ===================== dialogue ===================== -->
+  <div class="px dlg" id="dlg" data-who="driver" title="اضغط لإكمال الجملة">
+    <div class="portrait">
+      <svg id="pDriver" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect x="2" y="13" width="12" height="3" fill="#1d2b53"/>
+        <rect x="3" y="3" width="10" height="10" fill="#ffccaa" id="pFace"/>
+        <rect x="3" y="3" width="10" height="2" fill="#5f574f"/>
+        <rect x="2" y="5" width="1" height="4" fill="#5f574f"/><rect x="13" y="5" width="1" height="4" fill="#5f574f"/>
+        <g id="browCalm" fill="#000"><rect x="5" y="6" width="2" height="1"/><rect x="9" y="6" width="2" height="1"/></g>
+        <g id="browMad" fill="#000" style="display:none"><rect x="5" y="5" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/></g>
+        <rect x="5" y="7" width="2" height="1" fill="#000"/><rect x="9" y="7" width="2" height="1" fill="#000"/>
+        <rect x="7" y="8" width="2" height="2" fill="#e8a07a"/>
+        <rect x="4" y="10" width="8" height="1" fill="#000"/>
+        <rect id="mouthOk" x="6" y="12" width="4" height="1" fill="#7e2553"/>
+        <g id="mouthMad" fill="#7e2553" style="display:none"><rect x="6" y="11" width="4" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="10" y="12" width="1" height="1"/></g>
+      </svg>
+      <svg id="pStudent" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect x="2" y="12" width="12" height="4" fill="#ff004d"/>
+        <rect x="3" y="3" width="10" height="9" fill="#ffccaa"/>
+        <rect x="3" y="1" width="10" height="3" fill="#000"/><rect x="2" y="3" width="2" height="3" fill="#000"/>
+        <rect x="4" y="6" width="3" height="3" fill="#000"/><rect x="9" y="6" width="3" height="3" fill="#000"/><rect x="7" y="7" width="2" height="1" fill="#000"/>
+        <rect x="5" y="7" width="1" height="1" fill="#29adff"/><rect x="10" y="7" width="1" height="1" fill="#29adff"/>
+        <rect x="6" y="10" width="4" height="1" fill="#7e2553"/>
+      </svg>
+    </div>
+    <div class="body">
+      <span class="who" id="who">أبو صبحي</span>
+      <div class="text" id="dlgText">...</div>
+      <div class="more num" id="more" hidden>▼</div>
+    </div>
+  </div>
+
+  <!-- ===================== choices ===================== -->
+  <div class="px choices">
+    <h2>ماذا تقول لأبو صبحي؟</h2>
+    <div class="list" id="moves"></div>
+    <p class="hint">بعد كل جملة يضيف البرنامج حركة الطالب إلى الذاكرة كحقيقة جديدة (declare)، ثم ينفّذ القواعد (run). اختصار: الأرقام من 1 إلى 5.</p>
+  </div>
+
+  <!-- ===================== inside the expert system ===================== -->
+  <div class="panels">
+    <div class="px">
+      <h2>الذاكرة (الحقائق الآن)</h2>
+      <ul class="facts" id="facts"></ul>
+    </div>
+    <div class="px">
+      <h2>القواعد التي نُفِّذت</h2>
+      <p class="hint" style="margin:0 0 10px">الأحدث في الأعلى. «تلقائياً» تعني أن القاعدة نُفِّذت بسبب حقيقة أضافتها قاعدة سابقة، لا بسبب جملة الطالب مباشرة.</p>
+      <ul class="log" id="log"></ul>
+    </div>
+    <div class="px wide">
+      <h2>خرج البرنامج</h2>
+      <div class="term" id="term"><span class="cursor"></span></div>
+      <p class="hint">هذا ما يجب أن يطبعه برنامجك عند تشغيل الرحلة نفسها.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ENGINE START: a tiny forward-chaining engine with the same 7 rules as the assignment
+const SAYS = {
+  greet: (s) => `عالتل عالتل! ع${s.name} الأجرة ${s.fare.toLocaleString("en-US")} ليرة، تفضل`,
+  wait: "ماشي بس ما بحسن استنى كتير",
+  no_wait: "لا عمي ما بقدر، العالم مستعجلة",
+  big_note: "منين بدي جيب الفات؟ ما معي!",
+  no_change: "لك عمي وأنا ما معي فراطة هلئ، منشوف",
+  no_change_again: "كل شوي ما معنا فراطة؟! جيبو فراطة معكن يا عمي",
+  kind: "تكرم عمي ما منقصر معكن",
+  get_off: "يلا تكرم",
+  angry: "انزل من الباص خلص ما عاد بدي طلّع حدا معي",
+};
+const MOVES = [
+  { key: "wait", text: "استنى شوي رفيقي جاي" },
+  { key: "front", text: "استنى دقيقة بدي اطلع قدام" },
+  { key: "no_change", text: "ما معنا فراطة معلم" },
+  { key: "big_note", text: "زدلنا عشر تالاف ورا" },
+  { key: "get_off", text: "نزلني عند المعلوماتية زكاتك" },
+];
+const MOOD_AR = { calm: "طبيعي", annoyed: "متضايق", angry: "معصّب" };
+const RESULT_AR = { arrived: "وصلت عالكلية", kicked: "نزلت بنص الطريق" };
+
+function label(f) {
+  switch (f.type) {
+    case "stop": return `الوجهة: ${f.name}، الأجرة: ${f.fare.toLocaleString("en-US")} ليرة`;
+    case "mood": return `المزاج: ${MOOD_AR[f.value]}`;
+    case "greet": return "بداية الرحلة";
+    case "move": return `حركة الطالب: «${MOVES.find((m) => m.key === f.key).text}»`;
+    case "waited": return "السائق انتظر الطلاب";
+    case "annoyed": return "السائق انزعج";
+    case "said_no_change": return "الطالب قال «ما معنا فراطة» من قبل";
+    case "result": return `النتيجة: ${RESULT_AR[f.value]}`;
+  }
+}
+
+class Engine {
+  constructor() { this.facts = []; this.nextId = 1; }
+  reset() {
+    this.facts = []; this.nextId = 1;
+    this.declare({ type: "stop", name: "الجامعة", fare: 7000 });
+    this.declare({ type: "mood", value: "calm" });
+    this.declare({ type: "greet" });
+  }
+  find(pred) { return this.facts.find(pred) || null; }
+  declare(f) { f.id = this.nextId++; this.facts.push(f); if (this.ev) this.ev.added.push(label(f)); return f; }
+  retract(f) { this.facts = this.facts.filter((x) => x !== f); if (this.ev) this.ev.removed.push(label(f)); }
+  modify(f, value) { const before = label(f); f.value = value; if (this.ev) this.ev.changed.push(`${before} ← ${MOOD_AR[value]}`); }
+  say(text) { this.ev.lines.push(text); }
+  mood() { return this.find((f) => f.type === "mood"); }
+  move(...keys) { return this.find((f) => f.type === "move" && keys.includes(f.key)); }
+  over() { return this.find((f) => f.type === "result"); }
+
+  // run(): fire the first rule that matches, again and again, until no rule matches
+  run() {
+    const events = [];
+    for (let guard = 0; guard < 50; guard++) {
+      const rule = RULES.find((r) => r.when(this));
+      if (!rule) break;
+      this.ev = { rule, lines: [], added: [], removed: [], changed: [] };
+      rule.fire(this, rule.when(this));
+      this.ev.facts = this.facts.map(label);
+      this.ev.newIds = [];
+      this.ev.mood = this.mood().value;
+      events.push(this.ev);
+      this.ev = null;
+    }
+    return events;
+  }
+}
+
+const RULES = [
+  { num: 1, name: "الترحيب", tags: ["MATCH"],
+    when: (e) => { const g = e.find((f) => f.type === "greet"); const s = e.find((f) => f.type === "stop"); return g && s ? { g, s } : null; },
+    fire: (e, b) => { e.say(SAYS.greet(b.s)); e.retract(b.g); } },
+  { num: 2, name: "طلب انتظار", tags: ["OR", "AND"],
+    when: (e) => { const m = e.move("wait", "front"); return m && e.mood().value === "calm" ? m : null; },
+    fire: (e, m) => { e.say(SAYS.wait); e.retract(m); e.declare({ type: "waited" }); } },
+  { num: 2, name: "طلب انتظار والمزاج غير طبيعي", tags: ["NOT"],
+    when: (e) => { const m = e.move("wait", "front"); return m && e.mood().value !== "calm" ? m : null; },
+    fire: (e, m) => { e.say(SAYS.no_wait); e.retract(m); } },
+  { num: 3, name: "«زدلنا عشر تالاف ورا»", tags: [],
+    when: (e) => e.move("big_note"),
+    fire: (e, m) => { e.say(SAYS.big_note); e.retract(m); e.declare({ type: "annoyed" }); } },
+  { num: 4, name: "«ما معنا فراطة» لأول مرة", tags: ["NOT"],
+    when: (e) => { const m = e.move("no_change"); return m && !e.find((f) => f.type === "said_no_change") && e.mood().value === "calm" ? m : null; },
+    fire: (e, m) => { e.say(SAYS.no_change); e.retract(m); e.declare({ type: "said_no_change" }); } },
+  { num: 4, name: "«ما معنا فراطة» مرة ثانية أو المزاج غير طبيعي", tags: [],
+    when: (e) => e.move("no_change"),
+    fire: (e, m) => { e.say(SAYS.no_change_again); e.retract(m); e.declare({ type: "annoyed" }); } },
+  { num: 5, name: "النزول", tags: [],
+    when: (e) => e.move("get_off"),
+    fire: (e, m) => { e.say(SAYS.get_off); e.retract(m); e.declare({ type: "result", value: "arrived" }); } },
+  { num: 6, name: "«ما منقصر معكن»", tags: [], auto: true,
+    when: (e) => e.find((f) => f.type === "waited"),
+    fire: (e, w) => { e.say(SAYS.kind); e.retract(w); } },
+  { num: 7, name: "المزاج يتغيّر", tags: [], auto: true,
+    when: (e) => { const a = e.find((f) => f.type === "annoyed"); const md = e.mood(); return a && md.value !== "angry" ? { a, md } : null; },
+    fire: (e, b) => { e.retract(b.a); e.modify(b.md, b.md.value === "calm" ? "annoyed" : "angry"); } },
+  { num: 7, name: "المزاج «معصّب»", tags: [], auto: true,
+    when: (e) => (e.mood().value === "angry" && !e.over() ? true : null),
+    fire: (e) => { e.say(SAYS.angry); e.declare({ type: "result", value: "kicked" }); } },
+];
+
+// the same text output as the Python reference solution (used for testing)
+function simulate(moves) {
+  const out = [];
+  const e = new Engine();
+  e.reset();
+  e.run().forEach((ev) => ev.lines.forEach((l) => out.push("أبو صبحي: " + l)));
+  for (const key of moves) {
+    if (e.over()) break;
+    out.push("الطالب: " + MOVES.find((m) => m.key === key).text);
+    e.declare({ type: "move", key });
+    e.run().forEach((ev) => ev.lines.forEach((l) => out.push("أبو صبحي: " + l)));
+  }
+  out.push("النتيجة: " + RESULT_AR[e.over() && e.over().value === "arrived" ? "arrived" : "kicked"]);
+  return out;
+}
+// ENGINE END
+
+// ================================================================ page
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const HEARTS = { calm: 3, annoyed: 2, angry: 1 };
+let engine, busy = false, progress = 0, skip = false, mood = "calm";
+
+// ---------------------------------------------------------------- 8-bit sounds
+let actx = null, soundOn = true;
+try { soundOn = localStorage.getItem("servees-sound") !== "off"; } catch (e) {}
+function tone(f, d = 0.06, type = "square", vol = 0.04, when = 0) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + 0.02);
+  } catch (e) {}
+}
+const SFX = {
+  click: () => tone(660, 0.05),
+  blipD: () => tone(150 + Math.random() * 40, 0.04),
+  blipS: () => tone(430 + Math.random() * 50, 0.035),
+  add: () => { tone(880, 0.05, "square", 0.03); tone(1320, 0.05, "square", 0.03, 0.05); },
+  annoyed: () => { tone(220, 0.12, "square", 0.05); tone(165, 0.16, "square", 0.05, 0.12); },
+  angry: () => [300, 240, 190, 150].forEach((f, i) => tone(f, 0.14, "sawtooth", 0.05, i * 0.12)),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, "square", 0.05, i * 0.13)),
+  kick: () => [400, 300, 200, 120].forEach((f, i) => tone(f, 0.12, "triangle", 0.06, i * 0.1)),
+  coin: () => { tone(988, 0.06); tone(1319, 0.12, "square", 0.04, 0.06); },
+};
+function soundLabel() { $("sound").textContent = soundOn ? "الصوت: يعمل" : "الصوت: متوقف"; }
+$("sound").addEventListener("click", () => {
+  soundOn = !soundOn; soundLabel();
+  try { localStorage.setItem("servees-sound", soundOn ? "on" : "off"); } catch (e) {}
+});
+soundLabel();
+
+// ---------------------------------------------------------------- the scene (parallax layers are drawn twice: 0..320 and 320..640)
+function rnd(i) { const x = Math.sin(i * 12.9898) * 43758.5453; return x - Math.floor(x); }
+function rect(x, y, w, h, fill) { return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`; }
+function buildScene() {
+  let far = "", mid = "", lines = "", win = "";
+  for (const c of [0, 320]) {
+    for (let x = 0; x < 320; x += 8) {                       // Qasioun-like hills
+      const h = 22 + Math.round(10 * Math.sin(x / 41) + 6 * Math.sin(x / 15));
+      far += rect(c + x, 80 - h, 8, h + 30, "#83769c");
+      const h2 = 10 + Math.round(6 * Math.sin(x / 23 + 1));
+      far += rect(c + x, 88 - h2, 8, h2 + 20, "#6f6690");
+    }
+    for (const [cx, cy] of [[30, 16], [150, 26], [240, 10]]) {  // clouds
+      far += rect(c + cx, cy, 24, 6, "#fff1e8") + rect(c + cx + 6, cy - 4, 12, 4, "#fff1e8");
+    }
+    let x = 4, i = 0;
+    while (x < 312) {                                          // houses and olive trees
+      if (rnd(i + 7) < 0.3) {
+        mid += rect(c + x + 5, 98, 2, 8, "#ab5236") + rect(c + x, 88, 12, 10, "#008751") + rect(c + x + 2, 86, 8, 2, "#008751");
+        x += 18;
+      } else {
+        const w = 22 + Math.floor(rnd(i) * 14), h = 20 + Math.floor(rnd(i + 3) * 22);
+        const col = ["#d8c3a0", "#c2a27a", "#e6d5b8"][i % 3];
+        mid += rect(c + x, 106 - h, w, h, "#000") + rect(c + x + 1, 107 - h, w - 2, h - 1, col);
+        for (let wy = 110 - h; wy < 100; wy += 8) for (let wx = x + 4; wx < x + w - 6; wx += 7) mid += rect(c + wx, wy, 3, 4, "#1d2b53");
+        x += w + 6;
+      }
+      i++;
+    }
+    for (let dx = 0; dx < 320; dx += 24) lines += rect(c + dx, 126, 12, 2, "#fff1e8");
+  }
+  for (let wy = 54; wy < 84; wy += 10) for (let wx = 20; wx < 102; wx += 12) win += rect(wx, wy, 6, 6, "#29adff");
+  $("far").innerHTML = far; $("mid").innerHTML = mid; $("lines").innerHTML = lines; $("facWin").innerHTML = win;
+}
+
+function confetti() {
+  const cols = ["#ff004d", "#ffec27", "#00e436", "#29adff", "#ff77a8", "#ffa300"];
+  let s = "";
+  for (let i = 0; i < 46; i++) {
+    const x = Math.floor(Math.random() * 320), d = (Math.random() * 0.9).toFixed(2), dx = Math.floor(Math.random() * 40 - 20);
+    s += `<rect class="cf" x="${x}" y="-6" width="3" height="3" fill="${cols[i % cols.length]}" style="animation-delay:${d}s;--dx:${dx}px"/>`;
+  }
+  $("confetti").innerHTML = s;
+}
+
+function shake(red = false) {
+  const st = $("stage");
+  st.classList.remove("shake", "flash"); void st.offsetWidth;
+  st.classList.add("shake"); if (red) st.classList.add("flash");
+}
+
+async function drive(ms) {
+  $("stage").classList.add("moving");
+  await sleep(REDUCE ? 200 : ms);
+  $("stage").classList.remove("moving");
+}
+
+function setProgress(p) { progress = Math.min(p, 1); $("me").style.right = `${progress * 100}%`; }
+
+function setMood(value) {
+  const st = $("stage");
+  st.classList.remove("mood-calm", "mood-annoyed", "mood-angry");
+  st.classList.add("mood-" + value);
+  $("hearts").className = "hearts p" + HEARTS[value];
+  $("moodName").textContent = MOOD_AR[value];
+  const mad = value !== "calm";
+  $("browCalm").style.display = mad ? "none" : ""; $("browMad").style.display = mad ? "" : "none";
+  $("mouthOk").style.display = mad ? "none" : ""; $("mouthMad").style.display = mad ? "" : "none";
+  $("pFace").setAttribute("fill", value === "angry" ? "#ff6b6b" : "#ffccaa");
+  if (value !== mood) { if (value === "annoyed") { SFX.annoyed(); shake(); } if (value === "angry") { SFX.angry(); shake(true); } }
+  mood = value;
+}
+
+// ---------------------------------------------------------------- dialogue (typewriter)
+$("dlg").addEventListener("click", () => { skip = true; });
+async function typeLine(who, text) {
+  $("dlg").dataset.who = who;
+  $("who").textContent = who === "driver" ? "أبو صبحي" : "الطالب";
+  const t = $("dlgText");
+  skip = false;
+  if (REDUCE) { t.textContent = text; await sleep(500); return; }
+  for (let i = 1; i <= text.length; i++) {
+    if (skip) { t.textContent = text; break; }
+    t.textContent = text.slice(0, i);
+    if (i % 2) (who === "driver" ? SFX.blipD : SFX.blipS)();
+    await sleep(30);
+  }
+  $("more").hidden = false;
+  await sleep(skip ? 250 : 750);
+  $("more").hidden = true;
+}
+
+// ---------------------------------------------------------------- program output, memory, rules
+function term(line) {
+  const box = $("term"), d = document.createElement("div");
+  const [who, rest] = line.split(": ");
+  const s = document.createElement("span");
+  s.className = who === "أبو صبحي" ? "who-d" : who === "الطالب" ? "who-s" : "who-r";
+  s.textContent = who + ":";
+  d.appendChild(s); d.appendChild(document.createTextNode(" " + rest));
+  box.insertBefore(d, box.querySelector(".cursor"));
+  box.scrollTop = box.scrollHeight;
+}
+
+const KIND = [["الوجهة", "var(--sky)"], ["المزاج", "var(--orange)"], ["حركة الطالب", "var(--peach)"], ["السائق انتظر", "var(--lime)"],
+              ["السائق انزعج", "var(--red)"], ["الطالب قال", "var(--lav)"], ["النتيجة", "var(--yellow)"], ["بداية", "var(--silver)"]];
+function renderFacts(labels, fresh = [], modded = false) {
+  const ul = $("facts");
+  ul.innerHTML = "";
+  labels.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    const k = KIND.find(([p]) => t.startsWith(p));
+    if (k) li.style.setProperty("--k", k[1]);
+    if (fresh.includes(t)) li.classList.add("new");
+    if (modded && t.startsWith("المزاج")) li.classList.add("mod");
+    ul.appendChild(li);
+  });
+}
+async function updateFacts(ev) {
+  if (ev.removed.length) {
+    $("facts").querySelectorAll("li").forEach((li) => { if (ev.removed.includes(li.textContent)) li.classList.add("gone"); });
+    await sleep(REDUCE ? 0 : 450);
+  }
+  renderFacts(ev.facts, ev.added, ev.changed.length > 0);
+  if (ev.added.length) SFX.add();
+}
+
+function logEvent(ev) {
+  const li = document.createElement("li");
+  const b = document.createElement("span"); b.className = "badge"; b.textContent = "R" + ev.rule.num; li.appendChild(b);
+  const r = document.createElement("span"); r.className = "rule"; r.textContent = `القاعدة ${ev.rule.num}: ${ev.rule.name}`; li.appendChild(r);
+  ev.rule.tags.forEach((t) => { const s = document.createElement("span"); s.className = "tag"; s.textContent = t; li.appendChild(s); });
+  if (ev.rule.auto) { const s = document.createElement("span"); s.className = "tag auto"; s.textContent = "تلقائياً"; li.appendChild(s); }
+  const add = (cls, sign, items) => items.forEach((t) => {
+    const s = document.createElement("span"); s.className = "chg " + cls; s.textContent = `${sign} ${t}`; li.appendChild(s);
+  });
+  add("del", "حذف:", ev.removed); add("add", "إضافة:", ev.added); add("mod", "تعديل:", ev.changed);
+  $("log").prepend(li);
+}
+
+async function play(events) {
+  for (const ev of events) {
+    logEvent(ev);
+    await updateFacts(ev);
+    setMood(ev.mood);
+    if (ev.rule.num === 1) {
+      const s = engine.find((f) => f.type === "stop");
+      $("fare").textContent = s.fare.toLocaleString("en-US");
+      $("coin").classList.remove("pop"); void $("coin").offsetWidth; $("coin").classList.add("pop"); SFX.coin();
+    }
+    for (const l of ev.lines) { term("أبو صبحي: " + l); await typeLine("driver", l); }
+    await sleep(REDUCE ? 0 : 250);
+  }
+}
+
+// ---------------------------------------------------------------- game flow
+function setChoices(on) { document.querySelectorAll("#moves button").forEach((b) => (b.disabled = !on)); }
+
+async function ending(value) {
+  const arrived = value === "arrived";
+  term("النتيجة: " + RESULT_AR[arrived ? "arrived" : "kicked"]);
+  const st = $("stage"), kid = $("kid");
+  if (arrived) {
+    st.classList.add("moving", "arrive");
+    setProgress(1);
+    await sleep(REDUCE ? 200 : 2000);
+    st.classList.remove("moving");
+    kid.setAttribute("transform", "translate(76 90) scale(1.5)");
+    $("kidBang").style.display = "none";
+    kid.classList.add("show");
+    confetti(); SFX.win();
+  } else {
+    kid.setAttribute("transform", "translate(214 99) scale(1.5)");
+    $("kidBang").style.display = "";
+    kid.classList.add("show");
+    SFX.kick();
+    await sleep(500);
+    st.classList.add("kick");
+    await sleep(REDUCE ? 200 : 2300);
+  }
+  $("endTitle").textContent = arrived ? "وصلت عالكلية!" : "نزلت بنص الطريق!";
+  $("endSub").textContent = arrived ? "أبو صبحي أوصلك إلى المعلوماتية. جرّب طريقاً آخر يزعجه." : "أزعجت أبو صبحي حتى عصّب. جرّب رحلة أهدأ.";
+  $("end").className = "overlay " + (arrived ? "end-ok" : "end-bad");
+  $("end").hidden = false;
+}
+
+async function choose(move) {
+  if (busy || !engine || engine.over()) return;
+  busy = true; setChoices(false); SFX.click();
+  term("الطالب: " + move.text);
+  await typeLine("student", move.text);
+  const f = engine.declare({ type: "move", key: move.key });
+  renderFacts(engine.facts.map(label), [label(f)]);
+  SFX.add();
+  await sleep(REDUCE ? 0 : 500);
+  await play(engine.run());
+  const r = engine.over();
+  if (r) await ending(r.value);
+  else {
+    setProgress(Math.min(progress + 0.17, 0.85));
+    await drive(1500);
+    setChoices(true);
+  }
+  busy = false;
+}
+
+async function start() {
+  SFX.click();
+  $("title").hidden = true; $("end").hidden = true;
+  const st = $("stage");
+  st.classList.remove("arrive", "kick", "moving");
+  $("kid").classList.remove("show");
+  $("confetti").innerHTML = ""; $("log").innerHTML = "";
+  $("term").innerHTML = '<span class="cursor"></span>';
+  $("fare").textContent = "?";
+  engine = new Engine();
+  engine.reset();
+  mood = "calm"; setMood("calm"); setProgress(0);
+  renderFacts(engine.facts.map(label));
+  busy = true; setChoices(false);
+  await drive(1200);
+  await play(engine.run());
+  busy = false; setChoices(true);
+}
+
+MOVES.forEach((m, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "btn"; b.disabled = true;
+  b.innerHTML = `<span class="k">${i + 1}</span><span></span>`;
+  b.lastChild.textContent = m.text;
+  b.addEventListener("click", () => choose(m));
+  $("moves").appendChild(b);
+});
+document.addEventListener("keydown", (e) => {
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= MOVES.length) choose(MOVES[n - 1]);
+  if (e.key === "Enter" || e.key === " ") skip = true;
+});
+$("startBtn").addEventListener("click", start);
+$("againBtn").addEventListener("click", start);
+buildScene();
+setMood("calm");
+$("dlgText").textContent = "اضغط «ابدأ الرحلة» لتركب مع أبو صبحي.";
+</script>
+</body>
+</html>
