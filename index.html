@@ -315,7 +315,7 @@ const SAYS = {
   big_note: "منين بدي جيب الفات؟ ما معي!",
   no_change: "لك عمي وأنا ما معي فراطة هلئ، منشوف",
   no_change_again: "كل شوي ما معنا فراطة؟! جيبو فراطة معكن يا عمي",
-  kind: "تكرم عمي ما منقصر معكن",
+  kind: "استعجل عمي",
   get_off: "يلا تكرم",
   angry: "انزل من الباص خلص ما عاد بدي طلّع حدا معي",
 };
@@ -399,7 +399,7 @@ const RULES = [
   { num: 5, name: "النزول", tags: [],
     when: (e) => e.move("get_off"),
     fire: (e, m) => { e.say(SAYS.get_off); e.retract(m); e.declare({ type: "result", value: "arrived" }); } },
-  { num: 6, name: "«ما منقصر معكن»", tags: [], auto: true,
+  { num: 6, name: "«استعجل عمي»", tags: [], auto: true,
     when: (e) => e.find((f) => f.type === "waited"),
     fire: (e, w) => { e.say(SAYS.kind); e.retract(w); } },
   { num: 7, name: "المزاج يتغيّر", tags: [], auto: true,
